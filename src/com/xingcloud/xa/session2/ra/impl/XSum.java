@@ -2,6 +2,7 @@ package com.xingcloud.xa.session2.ra.impl;
 
 import com.xingcloud.xa.session2.ra.Aggregation;
 import com.xingcloud.xa.session2.ra.RelationProvider;
+import com.xingcloud.xa.session2.ra.RowIterator;
 import com.xingcloud.xa.session2.ra.Sum;
 
 /**
@@ -22,7 +23,15 @@ public class XSum extends AbstractAggregation implements Sum {
 	}
 
 	public Object aggregate() {
-		return null;  //TODO method implementation
+		double sum = 0;
+        RowIterator iterator = relation.iterator();
+        while(iterator.hasNext()){
+            XRelation.XRow row = (XRelation.XRow)iterator.nextRow();
+            if(row.get(columnName) != null){
+                sum += Double.parseDouble(row.get(columnName).toString());
+            }
+        }
+        return sum;
 	}
 
 	public void init() {
