@@ -1,6 +1,7 @@
 package com.xingcloud.xa.session2.ra.impl;
 
 import com.xingcloud.xa.session2.ra.*;
+import com.xingcloud.xa.session2.ra.expr.AggregationExpr;
 import com.xingcloud.xa.session2.ra.expr.Expression;
 import com.xingcloud.xa.session2.util.StringUtil;
 
@@ -45,6 +46,7 @@ public class XGroup extends AbstractOperation implements Group {
             Map<String, Integer> columnIndex = null;
             for(List<Object[]> groupRows: groups.values()){
                 XRelation groupRelation = new XRelation(relation.getColumnIndex(), groupRows);
+                updateProjectionExpressions(groupRelation);
                 Projection projection = PlanFactory.getInstance().newProjection();
                 projection.setInput(groupRelation, projectionExpressions);
                 Relation projectionRelation = projection.evaluate();
@@ -73,4 +75,27 @@ public class XGroup extends AbstractOperation implements Group {
 	public String toString() {
 		return IndentPrint.print(this);
 	}
+
+    private void updateProjectionExpressions(RelationProvider relationProvider){
+        for(Expression expr: projectionExpressions){
+            if(expr instanceof AggregationExpr){
+                Aggregation aggregation = ((AggregationExpr) expr).aggregation;
+                List<RelationProvider> inputs = ((AbstractAggregation)aggregation).getInputs();
+                RelationProvider oldRelationProvider = inputs.get(0);
+                if(oldRelationProvider instanceof XDistinct){
+                    XDistinct distinct = (XDistinct)oldRelationProvider;
+                    distinct.setInput(relationProvider, distinct.expressions);
+                    distinct.result = null;
+                } else{
+                    if(aggregation instanceof XCount){
+                        XCount count = (XCount)aggregation;
+                        count.setInput(relationProvider);
+                    } else if (aggregation instanceof XSum){
+                        XSum sum = (XSum)aggregation;
+                        sum.setInput(relationProvider, sum.columnName);
+                    }
+                }
+            }
+        }
+    }
 }
