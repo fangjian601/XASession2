@@ -5,10 +5,8 @@ import com.xingcloud.xa.session2.ra.Relation;
 import com.xingcloud.xa.session2.ra.RelationProvider;
 import com.xingcloud.xa.session2.ra.RowIterator;
 import com.xingcloud.xa.session2.ra.expr.Expression;
+import com.xingcloud.xa.session2.util.StringUtil;
 
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,7 +30,7 @@ public class XDistinct extends AbstractOperation implements Distinct {
                     XRelation.XRow row = (XRelation.XRow)iterator.nextRow();
                     StringBuilder key = new StringBuilder();
                     for(Expression e: expressions){
-                        key.append(getMD5(e.evaluate(row).toString()));
+                        key.append(StringUtil.getMD5(e.evaluate(row).toString()));
                     }
                     if(!distinctMap.containsKey(key.toString())){
                         distinctMap.put(key.toString(), row.rowData);
@@ -64,22 +62,4 @@ public class XDistinct extends AbstractOperation implements Distinct {
 	public String toString() {
 		return IndentPrint.print(this);
 	}
-
-    private String getMD5(String input){
-        MessageDigest m = null;
-        try {
-            m = MessageDigest.getInstance("MD5");
-            m.reset();
-            m.update(input.getBytes());
-            byte[] digest = m.digest();
-            BigInteger bigInt = new BigInteger(1,digest);
-            String hashText = bigInt.toString(16);
-            while(hashText.length() < 32 ){
-                hashText = "0"+hashText;
-            }
-            return hashText;
-        } catch (NoSuchAlgorithmException e) {
-            return "";
-        }
-    }
 }

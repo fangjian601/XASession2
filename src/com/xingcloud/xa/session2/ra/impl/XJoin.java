@@ -1,9 +1,7 @@
 package com.xingcloud.xa.session2.ra.impl;
 
-import com.xingcloud.xa.session2.ra.Join;
-import com.xingcloud.xa.session2.ra.Relation;
-import com.xingcloud.xa.session2.ra.RelationProvider;
-import com.xingcloud.xa.session2.ra.RowIterator;
+import com.xingcloud.xa.session2.ra.*;
+import com.xingcloud.xa.session2.util.StringUtil;
 
 import java.util.*;
 
@@ -36,20 +34,33 @@ public class XJoin extends AbstractOperation implements Join{
             }
             if(intersection.size() > 0){
                 List<Object[]> rows = new ArrayList<Object[]>();
+                Map<String, List<XRelation.XRow>> rightMap = new HashMap<String, List<XRelation.XRow>>();
                 RowIterator leftIterator = left.iterator();
+                RowIterator rightIterator = right.iterator();
+                while(rightIterator.hasNext()){
+                    XRelation.XRow rightRow = (XRelation.XRow)rightIterator.nextRow();
+                    StringBuilder sb = new StringBuilder();
+                    for(String column: intersection){
+                        sb.append(StringUtil.getMD5(rightRow.get(column).toString()));
+                    }
+                    if(rightMap.containsKey(sb.toString())){
+                        List<XRelation.XRow> list = rightMap.get(sb.toString());
+                        list.add(rightRow);
+                    } else {
+                        List<XRelation.XRow> list = new ArrayList<XRelation.XRow>();
+                        list.add(rightRow);
+                        rightMap.put(sb.toString(), list);
+                    }
+                }
                 while(leftIterator.hasNext()){
                     XRelation.XRow leftRow = (XRelation.XRow)leftIterator.nextRow();
-                    RowIterator rightIterator = right.iterator();
-                    while(rightIterator.hasNext()){
-                        XRelation.XRow rightRow = (XRelation.XRow)rightIterator.nextRow();
-                        boolean isRowEqual = true;
-                        for(String column: intersection){
-                            if(!leftRow.get(column).equals(rightRow.get(column))){
-                                isRowEqual = false;
-                                break;
-                            }
-                        }
-                        if(isRowEqual){
+                    StringBuilder sb = new StringBuilder();
+                    for(String column: intersection){
+                        sb.append(StringUtil.getMD5(leftRow.get(column).toString()));
+                    }
+                    if(rightMap.containsKey(sb.toString())){
+                        List<XRelation.XRow> rightList = rightMap.get(sb.toString());
+                        for(XRelation.XRow rightRow: rightList){
                             Object[] rowData = new Object[columnIndex.size()];
                             for(String column: columnIndex.keySet()){
                                 if(leftColumnIndex.containsKey(column)){
@@ -83,5 +94,4 @@ public class XJoin extends AbstractOperation implements Join{
 	public String toString() {
 		return IndentPrint.print(this);
 	}
-
 }

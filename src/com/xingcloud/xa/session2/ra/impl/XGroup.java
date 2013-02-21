@@ -2,10 +2,8 @@ package com.xingcloud.xa.session2.ra.impl;
 
 import com.xingcloud.xa.session2.ra.*;
 import com.xingcloud.xa.session2.ra.expr.Expression;
+import com.xingcloud.xa.session2.util.StringUtil;
 
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,7 +30,7 @@ public class XGroup extends AbstractOperation implements Group {
                 XRelation.XRow row = (XRelation.XRow)iterator.nextRow();
                 StringBuilder key = new StringBuilder();
                 for(Expression expr: groupingExpressions){
-                    key.append(getMD5(expr.evaluate(row).toString()));
+                    key.append(StringUtil.getMD5(expr.evaluate(row).toString()));
                 }
                 if(groups.containsKey(key.toString())){
                     List<Object[]> rows = groups.get(key.toString());
@@ -75,23 +73,4 @@ public class XGroup extends AbstractOperation implements Group {
 	public String toString() {
 		return IndentPrint.print(this);
 	}
-
-    private String getMD5(String input){
-        MessageDigest m = null;
-        try {
-            m = MessageDigest.getInstance("MD5");
-            m.reset();
-            m.update(input.getBytes());
-            byte[] digest = m.digest();
-            BigInteger bigInt = new BigInteger(1,digest);
-            String hashText = bigInt.toString(16);
-            while(hashText.length() < 32 ){
-                hashText = "0"+hashText;
-            }
-            return hashText;
-        } catch (NoSuchAlgorithmException e) {
-            return "";
-        }
-    }
-
 }
