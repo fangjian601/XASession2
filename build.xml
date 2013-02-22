@@ -1,6 +1,6 @@
 <project name="XASession2" default="dist" basedir=".">
     <description>
-        CMU SV Diagnostic Application build file
+        XASession2 build file
     </description>
     <!-- set global properties for this build -->
     <property name="src" location="src"/>
